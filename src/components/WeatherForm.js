@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useState } from 'react'
 import styled from 'styled-components'
-
+import axios from 'axios'
 const Form = styled.form`
   margin-bottom: 5px;
   display: flex;
@@ -55,19 +55,60 @@ const Span = styled.span`
   margin-right: 6px;
 `
 
+
+
+
 const WeatherForm = () => {
+  const [units, setUnits] = useState('m')
+  const [query, setQuery] = useState({query: ''})
+  const [weather, setWeather] = useState({
+    feelslike: '',
+    temperature: '',
+    humidity: '',
+    weather_descriptions: ''
+  })
+
+  const handleChange = event => {
+    setQuery({ ...query, [event.target.name]: event.target.value })
+  }
+
+  const handleChangeSystem = event => {
+    setUnits(event.target.value)
+  }
+
+  const params = {
+  access_key: '87a756caa948910577886bea45f7f778',
+  query: query,
+  units: units
+}
+
+  const handleSubmit = event => {
+    event.preventDefault()
+
+    axios.get('http://api.weatherstack.com/current', {params})
+      .then(res => {
+        setWeather(res.data.current)
+      }).catch(error => {
+        console.log(error)
+      })
+  }
+
   return (
     <FormContainer>
-      <Form>
-          <Input placeholder="Manchester" name="City"/>
-          <Input placeholder="UK" name="country"/>
+      <Form onSubmit={handleSubmit}>
+          <Input onChange={handleChange} placeholder="City" name="query" value={query.query}/>
+          <div style={{ color: "White" }} onChange={handleChangeSystem}>
+            <input style={{ marginLeft: "5px" }} type="radio" value="m" name="system"/> Cº
+            <input style={{ marginLeft: "5px" }} type="radio" value="f" name="system"/> Fº
+          </div>
+
           <SolidButton type="submit">Get Weather</SolidButton>
       </Form>
       <div style={{ marginTop: "20px" }}>
-        <P><Span> Location: </Span> Manchester, GB </P>
-        <P><Span> Temperature:</Span> 0.27 </P>
-        <P><Span> Humidity:</Span> 93% </P>
-        <P><Span> Conditions:</Span> mist </P>
+        <P><Span> Temperature:</Span> { weather.temperature !== '' ? (weather.temperature + 'º') : '' } </P>
+        <P><Span> Feels like:</Span> { weather.feelslike !== '' ? (weather.feelslike + 'º') : '' } </P>
+        <P><Span> Humidity:</Span> { weather.humidity } </P>
+        <P><Span> Descriptions:</Span> { weather.weather_descriptions } </P>
       </div>
     </FormContainer>
   )
